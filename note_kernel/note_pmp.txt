@@ -1,0 +1,39 @@
+Physical Memory Protection (PMP) is a feature in RISC-V processors that allows Machine mode to control the memory access permisions of
+lower privilege modes (Supervisor or User mode).
+
+PMP is used to enforce security by restricting access (read, write, execute) to specific memory regions for CPU modes.
+
+There are two types of PMP registers:
+1. PMP Address Register (MXLEN-bit, 32-bit for RV32, 64-bit for RV64)
+2. PMP Configuration Register (8-bit)
+
+PMP address registers are CSRs named pmpaddr0 to pmpaddr15.
+The PMP Address Register is used to specify the physical space region by encoding bits of the physical address.
+For RV64, they encode bits 55-2 of a 56-bit address (which means bits in positions 0 and 1 are not stored, even if you write to it).
+Bits 0 and 1 are excluded because PMP address registers deal with aligned addresses. The smallest region size specified in the address register is 4 bytes (2^2),
+so bits 0 and 1 can be assumed to be 0. (You cannot specified a region size smaller than 4-bytes for PMP)
+
+The PMP Configuration Register contains the following fields:
+(Bit 7)    L (Lock)                 : Locks the configuration until the next reset.
+(Bit 5,6)                           : 0 (WARL, Write Any Read Legal)
+(Bit 3,4)  A (Address-matching mode): OFF (0), TOR (1), NA4 (2), NAPOT (3)
+(Bit 2)    X (Execute)
+(Bit 1)    W (Write)
+(Bit 0)    R (Read)
+ 
+Addressing Matching Modes
+OFF: The region is disabled.
+TOR (Top of Range): The address range is between the address in the current pmpaddr and the address in the previous pmpaddr.
+NA4 (Naturally aligned 4-byte region): Matches a single 4-byte region.
+NAPOT (Naturally aligned power-of-two region): Matches region that are power-of-two in size and naturally aligned.
+
+A PMP entry consists of one 8-bit configuration register and one MXLEN-bit address register.
+Since up to 16 PMP entries are supported, there are a total of 16 configuration registers and 16 address registers.
+The physical space region specified in the address register follows the configuration specified in the configuration register.
+
+For 64-bit RISCV-V, the PMP configuration registers are densely packed into CSRs to minimize context-switch time.
+pmpcfg0 and pmpcfg2 (2 CSRs) hold the configurations for the 16 PMP entries.
+pmpcfg0 (64-bit) holds 8 configuration registers, pmp0cfg, pmp1cfg, pmp2cfg, ... , pmp7cfg.
+pmpcfg2 (64-bit) holds 8 configuration registers, pmp8cfg, pmp9cfg, pmp10cfg, ... , pmp15cfg.
+
+
