@@ -1,5 +1,5 @@
-#ifndef RISCV_REGISTER
-#define RISCV_REGISTER
+#ifndef RISCV_REGISTER_H
+#define RISCV_REGISTER_H
 
 #include "typedef.h"
 // thread pointer (tp) register, typically points to a thread local storage (TLS)
@@ -137,6 +137,40 @@ static inline void w_mscratch(uint64 x)
 
 
 // <<<<<--------[ Supervisor mode]-------->>>>>
+#define SSTATUS_SIE (1L << 1) // Supervisor Interrupt Enable
+
+static inline uint64 r_sstatus()
+{
+	uint64 x;
+	asm volatile("csrr %0, sstatus" : "=r" (x) );
+	return x;
+}
+
+static inline void w_sstatus(uint64 x)
+{
+	asm volatile("csrw sstatus, %0" : : "r" (x) );
+}
+
+// device interrupts
+//
+// get the state of whether interrupts are enabled or not
+static inline uint8 intr_get()
+{
+	uint8 x = r_sstatus();
+	return (x & SSTATUS_SIE) != 0;
+}
+
+// enable device interrupts
+static inline void intr_on()
+{
+	w_sstatus(r_sstatus() | SSTATUS_SIE);
+}
+
+// disable device interrupts
+static inline void intr_off()
+{
+	w_sstatus(r_sstatus() | ~SSTATUS_SIE);
+}
 
 // satp (Supervisor Address Translation and Protection) register
 // holds the address of the root page table entry
@@ -169,6 +203,17 @@ static inline uint64 r_sie()
 static inline void w_sie(uint64 x)
 {
 	asm volatile("csrw sie, %0" : : "r" (x) );
+}
+
+// <<<<<--------[ Locks ]-------->>>>>
+
+inline uint32 atomic_swap(uint32 *p_lock, uint32 value)
+{
+	asm volatile("amoswap.w %0, %0, (%1)"
+			: "+r" (value)
+			: "r" (p_lock)
+			: "memory");
+	return value;
 }
 
 #endif

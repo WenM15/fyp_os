@@ -1,7 +1,7 @@
 #include "typedef.h"
 #include "riscv_register.h"
 #include "qemu_memlayout.h"
-#define MAX_CPU 8
+#include "parameters.h"
 
 extern void func_init();
 extern void timer_vector();
@@ -13,7 +13,7 @@ uint64 timer_scratch_storage[MAX_CPU][5];
 void main()
 {	
 	// keep each CPU's hart id in its tp register
-	int hart_id = r_mhartid();
+	uint64 hart_id = r_mhartid();
 	w_tp(hart_id);
 
 	// CPU starts in Machine mode
@@ -62,9 +62,9 @@ static void timer_init()
 	w_mtvec((uint64)timer_vector);
 
 	// one million CPU cycles for every timer interrupt interval
-	int interval_cycles = 1000000;
+	uint64 interval_cycles = 1000000;
 	
-	int hart_id = r_tp();
+	uint64 hart_id = r_tp();
 
 	// there are N mtimecmp (64-bit) register for N hart and 1 mtime (64-bit) register in CLINT
 	// mtimecmp holds the value that the timer (mtime) will be compared against to trigger an interrupt

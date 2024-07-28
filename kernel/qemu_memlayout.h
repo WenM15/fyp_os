@@ -1,5 +1,5 @@
-#ifndef QEMU_MEMLAYOUT
-#define QEMU_MEMLAYOUT
+#ifndef QEMU_MEMLAYOUT_H
+#define QEMU_MEMLAYOUT_H
 // Physical memory layout
 
 // qemu -machine virt is set up like this,

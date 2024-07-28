@@ -4,7 +4,9 @@ OBJS = \
        $K/entry_point.o \
        $K/main.o \
        $K/init.o \
-       $K/trap_vector.o
+       $K/trap_vector.o \
+       $K/process.o \
+       $K/spinlock.o \
 
 ifndef TOOLPREFIX
 # inferring the correct TOOLPREFIX if not set

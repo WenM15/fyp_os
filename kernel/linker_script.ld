@@ -7,9 +7,9 @@ SECTIONS
 
 	.text : {
 		*(.text)
-		
-		PROVIDE(end_text = .);
 	}
+
+	PROVIDE(end_text = .);
 
 	.rodata : {
 		. = ALIGN(16);
@@ -26,5 +26,5 @@ SECTIONS
 		*(.bss)
 	}
 
-	PROVIDE(end = .);
+	PROVIDE(end_kerncode = .);
 }
