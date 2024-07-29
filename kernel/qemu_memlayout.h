@@ -23,5 +23,7 @@
 #define CLINT_MTIMECMP(hartid) (CLINT + 0x4000 + 8*(hartid))
 #define CLINT_MTIME (CLINT + 0xBFF8) // cycles since boot
 
+#define KERN_BASE 0x80000000L
+#define END_KERNMEM (KERN_BASE + 128*1024*1024) // 1KB * 1KB = 1MB
 
 #endif

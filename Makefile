@@ -7,6 +7,8 @@ OBJS = \
        $K/trap_vector.o \
        $K/process.o \
        $K/spinlock.o \
+       $K/kernel_mem_alloc.o \
+       $K/memory.o
 
 ifndef TOOLPREFIX
 # inferring the correct TOOLPREFIX if not set
