@@ -1,5 +1,4 @@
-#include "kernel_mem_alloc.h"
-#include "virtual_memory.h"
+#include "decl.h"
 
 void func_init()
 {

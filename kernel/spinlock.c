@@ -1,7 +1,8 @@
 #include "typedef.h"
-#include "spinlock_def.h"
+#include "spinlock.h"
 #include "riscv_register.h"
 #include "process.h"
+#include "decl.h"
 
 void init_lock(struct spinlock *p_lock)
 {

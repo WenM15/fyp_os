@@ -1,4 +1,5 @@
 #include "typedef.h"
+#include "decl.h"
 #include "process.h"
 #include "parameters.h"
 #include "riscv_register.h"

@@ -9,7 +9,4 @@ struct cpu
        	uint8 state_intr_bfr_csec;
 };
 
-uint64 r_cpuid();
-struct cpu* which_cpu();
-
 #endif

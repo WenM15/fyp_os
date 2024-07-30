@@ -1,7 +1,7 @@
-#include "spinlock_def.h"
+#include "spinlock.h"
 #include "typedef.h"
-#include "memory.h"
-#include "kernel_mem_alloc.h"
+#include "pages.h"
+#include "decl.h"
 #include "qemu_memlayout.h"
 
 extern uint8* end_kerncode;

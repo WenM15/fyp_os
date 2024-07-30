@@ -1,9 +1,8 @@
 #include "typedef.h"
 
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef PAGES_H
+#define PAGES_H
 
-// Pages
 #define PAGE_SIZE 4096
 #define PAGE_SHIFT 12
 
@@ -30,8 +29,5 @@
 // that have the high bit set.
 // MAX_VA is the highest possible virtual address + 1
 #define MAX_VA (1L << (9 + 9 + 9 + 12 - 1))
-
-// Memory operation
-void* memset(void *p_dest, uint8 value, uint64 n_bytes);
 
 #endif
