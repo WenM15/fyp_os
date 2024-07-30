@@ -8,7 +8,8 @@ OBJS = \
        $K/process.o \
        $K/spinlock.o \
        $K/kernel_mem_alloc.o \
-       $K/memory.o
+       $K/memory.o \
+       $K/virtual_memory.o
 
 ifndef TOOLPREFIX
 # inferring the correct TOOLPREFIX if not set
