@@ -10,6 +10,9 @@ void init_lock(struct spinlock *p_lock)
 	p_lock->p_cpu_struct = 0;
 }
 
+// disable interrupts but adds a reference count
+// if there are two requests to disable interrupts,
+// then the reference count is two.
 void increment_intr_off()
 {
 	uint8 prev_intr = intr_get();
@@ -24,6 +27,14 @@ void increment_intr_off()
 	p_cpu_struct->count_intr_off += 1;
 }
 
+// enable interrupts, and decrement the reference count
+// if the reference count is two,
+// and if there is one request to enable interrupt,
+// then interrupt won't be enabled because
+// reference count is still one.
+//
+// interrupt is enabled when reference count hits zero
+// and the previous interrupt state is enabled.
 void decrement_intr_off()
 {
 	struct cpu *p_cpu_struct = which_cpu();
@@ -45,12 +56,14 @@ void decrement_intr_off()
 	}
 }
 
+// checks whether the current CPU is holding the lock
 uint8 holding(struct spinlock* p_lock)
 {
 	uint8 held = (p_lock->locked && p_lock->p_cpu_struct == which_cpu());
 	return held;
 }
 
+// acquires a lock for the current CPU
 void acquire(struct spinlock *p_lock)
 {
 	increment_intr_off();
@@ -66,6 +79,7 @@ void acquire(struct spinlock *p_lock)
 	p_lock->p_cpu_struct = which_cpu();
 }
 
+// release a lock for the current CPU
 void release(struct spinlock *p_lock)
 {
 	if (!holding(p_lock))

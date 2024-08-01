@@ -6,6 +6,8 @@
 extern uint8* end_text;
 extern uint8* trampoline;
 
+// the kernel's root pagetable's memory address.
+// the pagetable has the size of a page (4096 bytes).
 uint64* p_kern_pgtable;
 
 void kernel_vm_init()
@@ -13,6 +15,8 @@ void kernel_vm_init()
 	p_kern_pgtable = create_kern_pgtable();
 }
 
+// creates the kernel's page table and
+// maps specified virtual addresses to physical addresses.
 uint64* create_kern_pgtable()
 {
 	uint64* p_kern_pgtable;
@@ -27,6 +31,7 @@ uint64* create_kern_pgtable()
 	return p_kern_pgtable;
 }
 
+// add kernel's virtual addresses to physical addresses
 void kern_add_map(uint64* p_kern_pgtable, uint64 va, uint64 pa, uint64 size, uint16 perm)
 {
 	if (map_pages(p_kern_pgtable, va, pa, size, perm) != 0)
@@ -35,7 +40,10 @@ void kern_add_map(uint64* p_kern_pgtable, uint64 va, uint64 pa, uint64 size, uin
 	}
 }
 
-// set physical address to highest level PTE (third level)
+// set physical address to lowest level PTE and adds page permission.
+// both starting and ending of virtual address
+// passed in might not be aligned
+// but both are included in the mapping.
 uint8 map_pages(uint64* p_pgtable, uint64 va, uint64 pa, uint64 size, uint16 perm)
 {
 	uint64 va_aligned, va_aligned_last;
@@ -72,8 +80,10 @@ uint8 map_pages(uint64* p_pgtable, uint64 va, uint64 pa, uint64 size, uint16 per
 	return 0;
 }
 
-
-uint64* walk(uint64* p_pgtable, uint64 va, uint8 alloc)
+// return the virtual address of the lowest level PTE
+// corresponding to the virtual address passed into it.
+// if alloc is 1, create any required pagetable or pages.
+int64* walk(uint64* p_pgtable, uint64 va, uint8 alloc)
 {
 	if (va >= MAX_VA)
 	{
@@ -101,6 +111,7 @@ uint64* walk(uint64* p_pgtable, uint64 va, uint8 alloc)
 		}
 
 	}
-
+	
+	// return the virtual address of lowest level PTE
 	return p_pgtable + PAGE_INDEX(0, va);
 }

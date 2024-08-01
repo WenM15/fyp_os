@@ -207,6 +207,11 @@ static inline void w_sie(uint64 x)
 
 // <<<<<--------[ Locks ]-------->>>>>
 
+// swaps the lock's value with the value provided
+// returns the lock's old value
+// this swap is an atomic operation,
+// which means that the lock's value can be accessed by
+// one CPU at a time
 inline uint32 atomic_swap(uint32 *p_lock, uint32 value)
 {
 	asm volatile("amoswap.w %0, %0, (%1)"

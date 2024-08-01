@@ -11,6 +11,7 @@ uint64 r_cpuid()
 	return r_tp();
 }
 
+// returns the pointer to the current CPU's structure
 struct cpu* which_cpu()
 {
 	uint64 cpu_id = r_cpuid();

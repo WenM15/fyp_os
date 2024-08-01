@@ -6,19 +6,19 @@
 
 extern uint8* end_kerncode;
 
+// contains the next physical page's address
 struct phypage_node
 {
 	struct phypage_node *next;
 };
 
+// whenever the freelist needs to be access, this handle facilitates the access
+// the freelist is a list of free physical pages
 struct
 {
 	struct spinlock lock;
 	struct phypage_node *freelist;
 } kernel_phypage_handle;
-
-// function declaration
-//void free_phypage_range(void *pa_start, void *pa_end);
 
 void kernel_phypage_init()
 {
@@ -26,6 +26,9 @@ void kernel_phypage_init()
 	free_phypage_range(end_kerncode, (void*)END_KERNMEM);
 }
 
+// specifies the range of physical memory to be freed.
+// if lower range is not aligned, take the next aligned page.
+// upper range is included in the page to be freed.
 void free_phypage_range(void *pa_start, void *pa_end)
 {
 	uint8 *pa = (uint8*)PAGE_ROUND_UP((uint64)pa_start);
@@ -36,6 +39,7 @@ void free_phypage_range(void *pa_start, void *pa_end)
 	}
 }
 
+// adds a physical page to the freelist
 void free_kernpage(void *pa)
 {
 	struct phypage_node* n;
@@ -57,6 +61,7 @@ void free_kernpage(void *pa)
 	release(&kernel_phypage_handle.lock);
 }
 
+// obtain a physical page from the freelist
 void* alloc_kernpage()
 {
 	struct phypage_node *n;
