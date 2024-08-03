@@ -16,6 +16,21 @@ static inline void w_tp(uint64 x)
 	asm volatile("addi tp, %0, 0" : : "r" (x) );
 }
 
+static inline void flush_TLB()
+{
+	// sfence.vma is used to synchronize modifications to
+	// virtual memory mappings with the hardware TLB.
+	//
+	// the first operand specifies a virtual address,
+	// if it is zero, it indicates all va should be considered
+	//
+	// the second operand specifies an Address Space Identifier (ASID)
+	// ASID is used to distinguish between identical va that belong
+	// to different processes.
+	// similar to first operand, zero indicates all ASID to be considered
+	asm volatile("sfence.vma zero, zero");
+}
+
 // <<<<<--------[ Machine mode ]-------->>>>>
 
 // read the hart (core)'s id
@@ -171,6 +186,11 @@ static inline void intr_off()
 {
 	w_sstatus(r_sstatus() | ~SSTATUS_SIE);
 }
+
+// riscv's sv39 page table scheme
+#define SATP_SV39_MODE (8L << 60)
+
+#define MAKE_SATP(p_pgtable) (SATP_SV39_MODE | (((uint64)(p_pgtable)) >> 12))
 
 // satp (Supervisor Address Translation and Protection) register
 // holds the address of the root page table entry

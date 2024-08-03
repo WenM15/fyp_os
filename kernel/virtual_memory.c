@@ -2,6 +2,7 @@
 #include "pages.h"
 #include "decl.h"
 #include "qemu_memlayout.h"
+#include "riscv_register.h"
 
 extern uint8* end_text;
 extern uint8* trampoline;
@@ -83,7 +84,7 @@ uint8 map_pages(uint64* p_pgtable, uint64 va, uint64 pa, uint64 size, uint16 per
 // return the virtual address of the lowest level PTE
 // corresponding to the virtual address passed into it.
 // if alloc is 1, create any required pagetable or pages.
-int64* walk(uint64* p_pgtable, uint64 va, uint8 alloc)
+uint64* walk(uint64* p_pgtable, uint64 va, uint8 alloc)
 {
 	if (va >= MAX_VA)
 	{
@@ -114,4 +115,17 @@ int64* walk(uint64* p_pgtable, uint64 va, uint8 alloc)
 	
 	// return the virtual address of lowest level PTE
 	return p_pgtable + PAGE_INDEX(0, va);
+}
+
+void kernel_enable_paging()
+{
+	// ensure all prior memory writes that could depend on the
+	// TLB are completed
+	flush_TLB();
+
+	w_satp(MAKE_SATP(p_kern_pgtable));
+
+	// ensure new memory mappings are reflected
+	// by flushing old translations
+	flush_TLB();
 }
