@@ -9,6 +9,7 @@ struct spinlock;
 uint64 r_cpuid();
 struct cpu* which_cpu();
 void kernstack_add_map(uint64* p_pgtable);
+void process_init();
 
 // spinlock.c
 void init_lock(struct spinlock* p_lock, char *name);

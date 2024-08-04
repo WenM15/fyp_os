@@ -5,10 +5,16 @@
 #include "riscv_register.h"
 #include "pages.h"
 #include "qemu_memlayout.h"
+#include "spinlock.h"
 
 struct cpu cpu_storage[MAX_CPU];
 
 struct process process_storage[MAX_PROCESS];
+
+uint32 next_pid = 1;
+struct spinlock pid_lock;
+
+struct spinlock wait_lock;
 
 uint64 r_cpuid()
 {
@@ -40,4 +46,20 @@ void kernstack_add_map(uint64* p_pgtable)
 
 		++p_process;
 	}
-}	
+}
+
+void process_init()
+{
+	struct process *p_process = process_storage;
+
+	init_lock(&pid_lock, "pid_lock");
+	init_lock(&wait_lock, "wait_lock");
+
+	while (p_process < process_storage + MAX_PROCESS)
+	{
+		init_lock(&p_process->lock, "process");
+		p_process->state = UNUSED;
+		p_process->kern_stack = KERN_STACK((uint32)(p_process - process_storage));
+		++p_process;
+	}
+}
