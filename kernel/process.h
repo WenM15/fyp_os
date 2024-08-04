@@ -1,7 +1,8 @@
-#include "typedef.h"
-
 #ifndef PROCESS_H
 #define PROCESS_H
+
+#include "typedef.h"
+#include "spinlock.h"
 
 struct cpu
 {
@@ -11,6 +12,11 @@ struct cpu
 	// the state of SIE (Supervisor Interrupt Enable) before
 	// the first access to a critical section
        	uint8 state_intr_bfr_csec;
+};
+
+struct process
+{
+	struct spinlock lock;
 };
 
 #endif

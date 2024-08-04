@@ -29,6 +29,9 @@ uint64* create_kern_pgtable()
 
 	kern_add_map(p_kern_pgtable, (uint64)end_text, (uint64)end_text, END_KERNMEM-(uint64)end_text, PTE_R | PTE_W);
 
+	// allocate and map a kernel stack for each process
+	kernstack_add_map(p_kern_pgtable);	
+
 	return p_kern_pgtable;
 }
 

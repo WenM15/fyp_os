@@ -1,16 +1,17 @@
-#include "typedef.h"
-
 #ifndef DECL_H
 #define DECL_H
+
+#include "typedef.h"
 
 struct spinlock;
 
 // process.c
 uint64 r_cpuid();
 struct cpu* which_cpu();
+void kernstack_add_map(uint64* p_pgtable);
 
 // spinlock.c
-void init_lock(struct spinlock* p_lock);
+void init_lock(struct spinlock* p_lock, char *name);
 void increment_intr_off();
 void decrement_intr_off();
 uint8 holding(struct spinlock* p_lock);

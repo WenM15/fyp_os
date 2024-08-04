@@ -1,5 +1,8 @@
 #ifndef QEMU_MEMLAYOUT_H
 #define QEMU_MEMLAYOUT_H
+
+#include "pages.h"
+
 // Physical memory layout
 
 // qemu -machine virt is set up like this,
@@ -25,5 +28,13 @@
 
 #define KERN_BASE 0x80000000L
 #define END_KERNMEM (KERN_BASE + 128*1024*1024) // 1KB * 1KB = 1MB
+
+// map the trampoline page to the highest address
+#define TRAMPOLINE (MAX_VA - PAGE_SIZE)
+
+// (virtual address)
+// map kernel stacks beneath the trampoline,
+// each surrounded by invalid guard pages.
+#define KERN_STACK(index) (TRAMPOLINE - PAGE_SIZE - ((index)+1) * 2 * PAGE_SIZE)
 
 #endif

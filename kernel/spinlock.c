@@ -4,9 +4,10 @@
 #include "process.h"
 #include "decl.h"
 
-void init_lock(struct spinlock *p_lock)
+void init_lock(struct spinlock *p_lock, char *name)
 {
 	p_lock->locked = 0;
+	p_lock->name = name;
 	p_lock->p_cpu_struct = 0;
 }
 

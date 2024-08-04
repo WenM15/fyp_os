@@ -1,7 +1,7 @@
-#include "typedef.h"
-
 #ifndef PAGES_H
 #define PAGES_H
+
+#include "typedef.h"
 
 #define PAGE_SIZE 4096
 #define PAGE_SHIFT 12 // number of bits to represent page offset

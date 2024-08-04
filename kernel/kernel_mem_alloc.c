@@ -22,7 +22,7 @@ struct
 
 void kernel_phypage_init()
 {
-	init_lock(&kernel_phypage_handle.lock);
+	init_lock(&kernel_phypage_handle.lock, "kernel_phypage_handle");
 	free_phypage_range(end_kerncode, (void*)END_KERNMEM);
 }
 
