@@ -68,9 +68,20 @@ usertrap(void)
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
-    printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
-    printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
-    setkilled(p);
+    char stack_overflow = 0;	  
+    uint64 scause = r_scause();
+    if(scause == 15 || scause == 13) { // 15 for load page fault, 13 for store page fault on RISC-V
+      printf("Stack growth check for ls: sp=%p, stval=%p\n", p->trapframe->sp, r_stval());
+	if (p->trapframe->sp == r_stval()){
+	stack_overflow = 1;
+	proc_addstack();
+      }
+    }
+    if (!stack_overflow){
+      printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
+      printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
+      setkilled(p);
+    }
   }
 
   if(killed(p))

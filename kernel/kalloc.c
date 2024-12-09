@@ -18,10 +18,13 @@ struct run {
   struct run *next;
 };
 
-struct {
+struct kmem_struct {
   struct spinlock lock;
   struct run *freelist;
-} kmem;
+  void *chan;
+};
+
+struct kmem_struct kmem;
 
 void
 kinit()
@@ -60,6 +63,8 @@ kfree(void *pa)
   r->next = kmem.freelist;
   kmem.freelist = r;
   release(&kmem.lock);
+
+  wakeup(kmem.chan);
 }
 
 // Allocate one 4096-byte page of physical memory.

@@ -135,6 +135,7 @@ UPROGS=\
 	$U/_fileinfo\
 	$U/_cp\
 	$U/_diskspace\
+	$U/_stacktest\
 
 fs.img: mkfs/mkfs $(UPROGS)
 	mkfs/mkfs fs.img $(UPROGS)

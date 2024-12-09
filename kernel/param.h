@@ -10,4 +10,5 @@
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       2000  // size of file system in blocks
+#define NSTACKALLOC  3     // number of stack allocation per process
 #define MAXPATH      128   // maximum file path name

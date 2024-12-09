@@ -124,6 +124,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->num_stack_alloc = NSTACKALLOC;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -680,4 +681,56 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+//struct kmem_struct {
+//  void* chan;
+//  struct spinlock lock;
+//  struct run *freelist;
+//};
+
+//extern struct kmem_struct kmem;
+
+void
+proc_addstack(void)
+{
+  struct proc *p = myproc();	
+  //uint64 sp = p->trapframe->sp;
+  uint64 stackbase = p->stackbase;
+  //uint64 offset = stackbase - sp;
+
+  uint64 cur_alloc = p->num_stack_alloc;
+  if (cur_alloc == 0)
+  {
+     killed(p);
+     return;
+  }
+  uint64 max_iter = NSTACKALLOC - cur_alloc + 1;
+  uint64 num_page = NSTACKALLOC - cur_alloc;
+
+  for (int i = 0; i <= max_iter; ++i, ++num_page){
+    uint64 va = stackbase + num_page*PGSIZE + 1;
+    pte_t *pgtable_entry = walk(p->pagetable, va, 0);
+    uint64 pa = PTE2PA(*pgtable_entry);
+    pgtable_entry = 0;
+    uint64 new_va = stackbase + (num_page + 1)*PGSIZE + 1;
+    mappages(p->pagetable, new_va, PGSIZE, pa, PTE_R|PTE_W|PTE_U);
+    //while (mappages(p->pagetable, new_va, PGSIZE, pa, PTE_R|PTE_W|PTE_U) != 0){
+//	sleep(kmem.chan, &kmem.lock);
+  //  }
+  }
+  
+  char* new_pa;
+  new_pa = kalloc();
+  //while ((new_pa = kalloc()) == 0)
+  //{}
+
+  memset(new_pa, 0, PGSIZE);
+  mappages(p->pagetable, stackbase + 1, PGSIZE, (uint64)new_pa, PTE_R|PTE_W|PTE_U);
+ // while (mappages(p->pagetable, stackbase + 1, PGSIZE, (uint64)new_pa, PTE_R|PTE_W|PTE_U) != 0){
+   // sleep(kmem.chan, &kmem.lock);
+ // }
+  
+  p->trapframe->sp += PGSIZE;
+  p->num_stack_alloc -= 1;
 }
