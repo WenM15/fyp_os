@@ -1,15 +1,9 @@
-#ifndef SPINLOCK_H
-#define SPINLOCK_H
+// Mutual exclusion lock.
+struct spinlock {
+  uint locked;       // Is the lock held?
 
-#include "typedef.h"
-
-struct cpu;
-
-struct spinlock
-{
-	uint32 locked;
-	char *name;
-	struct cpu *p_cpu_struct;
+  // For debugging:
+  char *name;        // Name of lock.
+  struct cpu *cpu;   // The cpu holding the lock.
 };
 
-#endif

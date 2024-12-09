@@ -1,103 +1,110 @@
-#include "typedef.h"
+// Mutual exclusion spin locks.
+
+#include "types.h"
+#include "param.h"
+#include "memlayout.h"
 #include "spinlock.h"
-#include "riscv_register.h"
-#include "process.h"
-#include "decl.h"
+#include "riscv.h"
+#include "proc.h"
+#include "defs.h"
 
-void init_lock(struct spinlock *p_lock, char *name)
+void
+initlock(struct spinlock *lk, char *name)
 {
-	p_lock->locked = 0;
-	p_lock->name = name;
-	p_lock->p_cpu_struct = 0;
+  lk->name = name;
+  lk->locked = 0;
+  lk->cpu = 0;
 }
 
-// disable interrupts but adds a reference count
-// if there are two requests to disable interrupts,
-// then the reference count is two.
-void increment_intr_off()
+// Acquire the lock.
+// Loops (spins) until the lock is acquired.
+void
+acquire(struct spinlock *lk)
 {
-	uint8 prev_intr = intr_get();
+  push_off(); // disable interrupts to avoid deadlock.
+  if(holding(lk))
+    panic("acquire");
 
-	intr_off();
-	
-	struct cpu *p_cpu_struct = which_cpu();
-	if (p_cpu_struct->count_intr_off == 0)
-	{
-		p_cpu_struct->state_intr_bfr_csec = prev_intr; 
-	}
-	p_cpu_struct->count_intr_off += 1;
+  // On RISC-V, sync_lock_test_and_set turns into an atomic swap:
+  //   a5 = 1
+  //   s1 = &lk->locked
+  //   amoswap.w.aq a5, a5, (s1)
+  while(__sync_lock_test_and_set(&lk->locked, 1) != 0)
+    ;
+
+  // Tell the C compiler and the processor to not move loads or stores
+  // past this point, to ensure that the critical section's memory
+  // references happen strictly after the lock is acquired.
+  // On RISC-V, this emits a fence instruction.
+  __sync_synchronize();
+
+  // Record info about lock acquisition for holding() and debugging.
+  lk->cpu = mycpu();
 }
 
-// enable interrupts, and decrement the reference count
-// if the reference count is two,
-// and if there is one request to enable interrupt,
-// then interrupt won't be enabled because
-// reference count is still one.
-//
-// interrupt is enabled when reference count hits zero
-// and the previous interrupt state is enabled.
-void decrement_intr_off()
+// Release the lock.
+void
+release(struct spinlock *lk)
 {
-	struct cpu *p_cpu_struct = which_cpu();
-	
-	if (intr_get())
-	{
-		// panic
-	}
-	if (p_cpu_struct->count_intr_off < 1)
-	{
-		// panic
-	}
-	
-	p_cpu_struct->count_intr_off -= 1;
+  if(!holding(lk))
+    panic("release");
 
-	if (p_cpu_struct->count_intr_off == 0 && p_cpu_struct->state_intr_bfr_csec)
-	{
-		intr_on();
-	}
+  lk->cpu = 0;
+
+  // Tell the C compiler and the CPU to not move loads or stores
+  // past this point, to ensure that all the stores in the critical
+  // section are visible to other CPUs before the lock is released,
+  // and that loads in the critical section occur strictly before
+  // the lock is released.
+  // On RISC-V, this emits a fence instruction.
+  __sync_synchronize();
+
+  // Release the lock, equivalent to lk->locked = 0.
+  // This code doesn't use a C assignment, since the C standard
+  // implies that an assignment might be implemented with
+  // multiple store instructions.
+  // On RISC-V, sync_lock_release turns into an atomic swap:
+  //   s1 = &lk->locked
+  //   amoswap.w zero, zero, (s1)
+  __sync_lock_release(&lk->locked);
+
+  pop_off();
 }
 
-// checks whether the current CPU is holding the lock
-uint8 holding(struct spinlock* p_lock)
+// Check whether this cpu is holding the lock.
+// Interrupts must be off.
+int
+holding(struct spinlock *lk)
 {
-	uint8 held = (p_lock->locked && p_lock->p_cpu_struct == which_cpu());
-	return held;
+  int r;
+  r = (lk->locked && lk->cpu == mycpu());
+  return r;
 }
 
-// acquires a lock for the current CPU
-void acquire(struct spinlock *p_lock)
-{
-	increment_intr_off();
-	if (holding(p_lock))
-	{
-		// panic
-	}
-	
-	while(atomic_swap(&p_lock->locked, 1) != 0){}
-	
-	asm volatile("fence" : : : "memory");
+// push_off/pop_off are like intr_off()/intr_on() except that they are matched:
+// it takes two pop_off()s to undo two push_off()s.  Also, if interrupts
+// are initially off, then push_off, pop_off leaves them off.
 
-	p_lock->p_cpu_struct = which_cpu();
+void
+push_off(void)
+{
+  int old = intr_get();
+
+  intr_off();
+  if(mycpu()->noff == 0)
+    mycpu()->intena = old;
+  mycpu()->noff += 1;
 }
 
-// release a lock for the current CPU
-void release(struct spinlock *p_lock)
+void
+pop_off(void)
 {
-	if (!holding(p_lock))
-	{
-		// panic
-	}
-
-	p_lock->p_cpu_struct = 0;
-
-	asm volatile("fence" : : : "memory");
-
-	if (atomic_swap(&p_lock->locked, 0) != 1)
-	{
-		// panic
-	}
-
-	decrement_intr_off();
+  struct cpu *c = mycpu();
+  if(intr_get())
+    panic("pop_off - interruptible");
+  if(c->noff < 1)
+    panic("pop_off");
+  c->noff -= 1;
+  if(c->noff == 0 && c->intena)
+    intr_on();
 }
-
-
