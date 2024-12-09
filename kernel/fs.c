@@ -104,6 +104,34 @@ bfree(int dev, uint b)
   brelse(bp);
 }
 
+// count total number of free blocks available in disk
+uint
+count_free_blocks(void)
+{
+    struct superblock sb;
+    readsb(ROOTDEV, &sb);
+    uint free_blocks = 0;
+
+    for(uint b = 0; b < sb.size; b += BPB) {  // Increment b by BPB (8192)
+      struct buf *bp = bread(ROOTDEV, BBLOCK(b, sb));
+      uchar *bitmap = bp->data;
+      for(int bi = 0; bi < BPB && b + bi < sb.size; bi++){  // Check if we're within file system size
+        if((bitmap[bi/8] & (1 << (bi%8))) == 0)  // Check if bit is 0 (free)
+          free_blocks++;
+      }
+      brelse(bp);
+    }
+  return free_blocks;
+}
+
+uint
+read_disk_size(void)
+{
+  struct superblock sb;	
+  readsb(ROOTDEV, &sb);
+  return sb.size;
+}
+
 // Inodes.
 //
 // An inode describes a single unnamed file.

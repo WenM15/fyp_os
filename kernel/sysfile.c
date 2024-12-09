@@ -512,3 +512,24 @@ sys_pipe(void)
   }
   return 0;
 }
+
+uint64
+sys_diskspace(void)
+{
+  uint64 total_blk_addr, free_blk_addr;
+
+  argaddr(0, &total_blk_addr);
+  argaddr(1, &free_blk_addr);
+
+  struct proc *p = myproc();
+  uint total_disk = read_disk_size();
+  uint free_blocks = count_free_blocks();
+
+  if (copyout(p->pagetable, (uint64)total_blk_addr, (char*)&total_disk, sizeof(uint)) < 0)
+    return -1;
+
+  if (copyout(p->pagetable, (uint64)free_blk_addr, (char*)&free_blocks, sizeof(uint)) < 0)
+    return -1;
+
+  return 0;
+}

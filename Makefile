@@ -134,6 +134,7 @@ UPROGS=\
 	$U/_zombie\
 	$U/_fileinfo\
 	$U/_cp\
+	$U/_diskspace\
 
 fs.img: mkfs/mkfs $(UPROGS)
 	mkfs/mkfs fs.img $(UPROGS)
