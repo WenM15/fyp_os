@@ -23,6 +23,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int diskspace(uint*, uint*);
+int rename(char*, char*);
 
 // ulib.c
 int stat(const char*, struct stat*);

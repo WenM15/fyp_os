@@ -533,3 +533,12 @@ sys_diskspace(void)
 
   return 0;
 }
+
+uint64
+sys_rename(void)
+{
+  char old[DIRSIZ], new[DIRSIZ];
+  if(argstr(0, old, DIRSIZ) < 0 || argstr(1, new, DIRSIZ) < 0)
+    return -1;
+  return rename(old, new);
+}

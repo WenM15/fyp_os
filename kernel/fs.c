@@ -633,6 +633,32 @@ dirlink(struct inode *dp, char *name, uint inum)
   return 0;
 }
 
+// Remove a directory entry (name) from directory dp.
+// Returns 0 on success, -1 on failure.
+int
+dirunlink(struct inode *dp, char *name)
+{
+  int off;
+  struct dirent de;
+
+  // Look for the directory entry to remove.
+  for(off = 0; off < dp->size; off += sizeof(de)){
+    if(readi(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
+      panic("dirunlink read");
+    if(strncmp(de.name, name, DIRSIZ) == 0 && de.inum != 0){
+      // Found the entry, now remove it by clearing the inode number.
+      de.inum = 0;
+      if(writei(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
+        return -1;
+
+      return 0;
+    }
+  }
+
+  // If we didn't find the name, return -1 indicating failure
+  return -1;
+}
+
 // Paths
 
 // Copy the next path element from path into name.
@@ -670,6 +696,51 @@ skipelem(char *path, char *name)
   while(*path == '/')
     path++;
   return path;
+}
+
+int
+rename(char *old, char *new)
+{
+  struct inode *old_dp, *ip;
+  char old_name[DIRSIZ];
+
+  begin_op();
+
+  // Get the inode of the old path's parent
+  if((old_dp = nameiparent(old, old_name)) == 0){
+    end_op();
+    return -1;
+  }
+
+  // Look up the inode of the file or directory to be renamed
+  if((ip = namei(old)) == 0){
+    end_op();
+    return -1;
+  }
+  ilock(ip);
+
+  // Add a dirent to old_dp with the new name, pointing to ip's inode
+  if(dirlink(old_dp, new, ip->inum) < 0){
+    iunlockput(ip);
+    end_op();
+    return -1;
+  }
+  
+  ilock(old_dp);
+  // Remove the old path's dirent from the inode of the old path's parent
+  if(dirunlink(old_dp, old_name) < 0){
+    // Attempt to undo the new link if removal fails
+    dirunlink(old_dp, new);
+    iunlockput(old_dp);
+    end_op();
+    return -1;
+  }
+
+  iunlockput(ip);
+  iunlockput(old_dp);
+  end_op();
+
+  return 0;
 }
 
 // Look up and return the inode for a path name.
