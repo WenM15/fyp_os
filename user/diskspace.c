@@ -1,5 +1,6 @@
 #include "kernel/types.h"
 #include "kernel/stat.h"
+#include "kernel/fs.h"
 #include "user.h"
 
 int
@@ -17,5 +18,10 @@ main(void)
     printint(1, free_blocks, 10, 0);
     printf("\n");
 
+    printf("Total disk space in bytes: ");
+    printint(1, total_blocks * BSIZE, 10, 0);
+    printf(", Free disk space in bytes: ");
+    printint(1, free_blocks * BSIZE, 10, 0);
+    printf("\n");
     exit(0);
 }

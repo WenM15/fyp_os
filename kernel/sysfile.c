@@ -518,8 +518,8 @@ sys_diskspace(void)
 {
   uint64 total_blk_addr, free_blk_addr;
 
-  argaddr(0, &total_blk_addr);
-  argaddr(1, &free_blk_addr);
+  argaddr(1, &total_blk_addr);
+  argaddr(0, &free_blk_addr);
 
   struct proc *p = myproc();
   uint total_disk = read_disk_size();
